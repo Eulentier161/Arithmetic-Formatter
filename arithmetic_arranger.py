@@ -12,15 +12,15 @@ class NumberTooBig(Exception):
 
 class Problem:
     def __init__(self, n1: str, operator: str, n2: str):
-        if operator not in "+-":
-            raise BadOperator()
-        if len(n1) > 4 or len(n2) > 4:
-            raise NumberTooBig()
         self.n1 = int(n1)
         self.n2 = int(n2)
-        self.operator: Literal["+", "-"] = operator
         self.n_width = max(len(n1), len(n2))
+        if self.n_width > 4:
+            raise NumberTooBig()
+        if operator not in "+-":
+            raise BadOperator()
         self.max_width = self.n_width + 2
+        self.operator: Literal["+", "-"] = operator
 
     @cached_property
     def result(self):
@@ -40,10 +40,14 @@ def arithmetic_arranger(problems: list[str], include_result: bool = False):
     except NumberTooBig:
         return "Error: Numbers cannot be more than four digits."
 
-    arranged_problems = "    ".join(f"{problem.n1:>{problem.max_width}}" for problem in parsed_problems)
-    arranged_problems += "\n" + "    ".join(f"{problem.operator} {problem.n2:>{problem.n_width}}" for problem in parsed_problems)
-    arranged_problems += "\n" + "    ".join("-" * problem.max_width for problem in parsed_problems)
+    lines = [[], [], []]
     if include_result:
-        arranged_problems += "\n" + "    ".join(f"{problem.result:>{problem.max_width}}" for problem in parsed_problems)
+        lines.append([])
+    for problem in parsed_problems:
+        lines[0].append(f"{problem.n1:>{problem.max_width}}")
+        lines[1].append(f"{problem.operator} {problem.n2:>{problem.n_width}}")
+        lines[2].append("-" * problem.max_width)
+        if include_result:
+            lines[3].append(f"{problem.result:>{problem.max_width}}")
 
-    return arranged_problems
+    return "\n".join("    ".join(line) for line in lines)
